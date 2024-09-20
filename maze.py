@@ -1,4 +1,4 @@
-
+from tkinter import Tk, BOTH, Canvas
 from time import sleep
 
 
@@ -44,7 +44,7 @@ class Window:
 
 
 class Cell:
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, window: Window, has_left_wall: bool = True, has_right_wall: bool = True, has_top_wall: bool = True, has_bottom_wall: bool = True) -> None:
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, window = None, has_left_wall: bool = True, has_right_wall: bool = True, has_top_wall: bool = True, has_bottom_wall: bool = True) -> None:
         self.has_left_wall = has_left_wall
         self.has_right_wall = has_right_wall
         self.has_top_wall = has_top_wall
@@ -64,23 +64,27 @@ class Cell:
         l_bottom = Line(p3, p2)
         l_left = Line(p1, p3)
         l_right = Line(p4, p2)
-        if self.has_top_wall:
-            self._win.draw_line(l_top, "white" if break_top else "black")
-        if self.has_bottom_wall:
-            self._win.draw_line(l_bottom, "white" if break_bottom else "black")
-        if self.has_right_wall:
-            self._win.draw_line(l_right, "white" if break_right else "black")
-        if self.has_left_wall:
-            self._win.draw_line(l_left, "white" if break_left else "black")
+        if self._win:
+            if self.has_top_wall:
+                self._win.draw_line(l_top, "white" if break_top else "black")
+            if self.has_bottom_wall:
+                self._win.draw_line(l_bottom, "white" if break_bottom else "black")
+            if self.has_right_wall:
+                self._win.draw_line(l_right, "white" if break_right else "black")
+            if self.has_left_wall:
+                self._win.draw_line(l_left, "white" if break_left else "black")
 
     def draw_move(self, to_cell, undo=False):
         color = "gray" if undo else "red"
         p1 = Point((self._x1 + self._x2) // 2, (self._y1 + self._y2) // 2)
         p2 = Point((to_cell._x1 + to_cell._x2) // 2, (to_cell._y1 + to_cell._y2) // 2)
-        self._win.draw_line(Line(p1, p2), color)
+        if self._win:
+            self._win.draw_line(Line(p1, p2), color)
 
 class Maze:
-    def __init__(self, x1: int, y1: int, num_rows: int, num_cols: int, cell_size_x: int, cell_size_y: int, win: Window) -> None:
+    def __init__(self, x1: int, y1: int, num_rows: int, num_cols: int, cell_size_x: int, cell_size_y: int, win = None) -> None:
+        if num_rows < 1 or num_cols < 1:
+            raise Exception("Maze must have at least one row and column")
         self._x1 = x1
         self._y1 = y1
         self._num_rows = num_rows
@@ -92,7 +96,12 @@ class Maze:
         self._create_cells()
 
     def _create_cells(self):
-# TODO: create all cell objects
+        for row in range(self._num_rows):
+            self._cells.append([])
+            for col in range(self._num_cols):
+                self._cells[row].append(Cell(x1=self._x1 + self._cell_size_x * col, y1=self._y1 + self._cell_size_y * row,
+                                        x2= self._x1 + self._cell_size_x * (col + 1), y2=self._y1 + self._cell_size_y * (row + 1), window=self._win))
+
 
         for i in range(self._num_rows):
             for j in range(self._num_cols):
@@ -103,17 +112,14 @@ class Maze:
         self._animate()
 
     def _animate(self):
-        self._win.redraw()
-        sleep(0.05)
+        if self._win:
+            self._win.redraw()
+            sleep(0.02)
 
 
 def main():
     win = Window(800, 600)
-    cell = Cell(80, 160, 574, 378, win)
-    cell.draw()
-    cell2 = Cell(100, 200, 200, 300, win)
-    cell2.draw()
-    cell.draw_move(cell2)
+    _ = Maze(10, 10, 15, 15, 20, 20, win)
     win.wait_for_close()
 
 if __name__ == "__main__":
